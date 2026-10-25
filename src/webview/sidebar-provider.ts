@@ -153,10 +153,11 @@ export class ArgonSidebarProvider implements vscode.WebviewViewProvider {
     this.syncState(false);
     setTimeout(() => {
       const active = this.sessionManager.getActiveAccount();
-      if (active) {
+      // Only poll live limits on startup if account is actively confirmed
+      if (active && active.status === 'active') {
         const usage = this.usageStore.getAccountUsage(active.id);
-        if (!usage.officialLimits || usage.officialLimits.currentResetTime === 'Unknown') {
-          this.syncState(true);
+        if (usage.officialLimits && usage.officialLimits.currentResetTime === 'Unknown') {
+          this.syncState(true).catch(() => {});
           return;
         }
       }
@@ -1239,55 +1240,62 @@ export class ArgonSidebarProvider implements vscode.WebviewViewProvider {
           accCount.textContent = data.accounts.length + ' connected';
           accountsList.innerHTML = '';
 
-          data.accounts.forEach(acc => {
-            const item = document.createElement('div');
-            item.className = acc.isActive ? 'account-item active' : 'account-item';
-
-            const initial = (acc.email || 'A').charAt(0).toUpperCase();
-            let statusBadge = '';
-            if (acc.status === 'needs_login' || acc.status === 'logged_out' || acc.status === 'expired') {
-              statusBadge = '<span style="color: #ef4444; font-size: 10px; background: rgba(239, 68, 68, 0.15); padding: 2px 6px; border-radius: 4px; margin-right: 4px;">Needs Login</span>';
-            } else if (acc.status === 'rate-limited') {
-              statusBadge = '<span style="color: var(--amber); font-size: 10px; background: rgba(245, 158, 11, 0.15); padding: 2px 6px; border-radius: 4px; margin-right: 4px;">Limit Reached</span>';
-            } else if (acc.isActive) {
-              statusBadge = '<span style="color: var(--accent-blue); font-weight: 700; font-size: 11px; margin-right: 4px;">Active</span>';
-            }
-
-            item.innerHTML = '<div class="acc-info">' +
-              '<div class="avatar">' + initial + '</div>' +
-              '<div>' +
-                '<div class="acc-email">' + acc.email + '</div>' +
-                '<div class="acc-sub">' + acc.alias + ' (' + acc.plan + ')</div>' +
-              '</div>' +
-            '</div>' +
-            '<div style="display: flex; align-items: center; gap: 4px;">' +
-              statusBadge +
-              '<button class="btn-icon btn-remove-acc" data-id="' + acc.id + '" title="Remove account">' +
-                '<svg viewBox="0 0 24 24" class="icon icon-sm"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
-              '</button>' +
+          if (data.accounts.length === 0) {
+            accountsList.innerHTML = '<div style="padding: 12px 8px; text-align: center; background: rgba(255, 255, 255, 0.02); border: 1px dashed rgba(255, 255, 255, 0.08); border-radius: 6px; margin-bottom: 8px;">' +
+              '<div style="font-size: 11px; font-weight: 600; color: var(--text); margin-bottom: 3px;">No Account Connected</div>' +
+              '<div style="font-size: 10px; color: var(--text-muted); line-height: 1.4;">Click below to connect your Google Pro or claimed promotional account.</div>' +
             '</div>';
+          } else {
+            data.accounts.forEach(acc => {
+              const item = document.createElement('div');
+              item.className = acc.isActive ? 'account-item active' : 'account-item';
 
-            item.addEventListener('click', (e) => {
-              if (e.target.closest('.btn-remove-acc')) return;
+              const initial = (acc.email || 'A').charAt(0).toUpperCase();
+              let statusBadge = '';
               if (acc.status === 'needs_login' || acc.status === 'logged_out' || acc.status === 'expired') {
-                vscode.postMessage({ type: 'relogin', accountId: acc.id });
-                return;
+                statusBadge = '<span style="color: #ef4444; font-size: 10px; background: rgba(239, 68, 68, 0.15); padding: 2px 6px; border-radius: 4px; margin-right: 4px;">Needs Login</span>';
+              } else if (acc.status === 'rate-limited') {
+                statusBadge = '<span style="color: var(--amber); font-size: 10px; background: rgba(245, 158, 11, 0.15); padding: 2px 6px; border-radius: 4px; margin-right: 4px;">Limit Reached</span>';
+              } else if (acc.isActive) {
+                statusBadge = '<span style="color: var(--accent-blue); font-weight: 700; font-size: 11px; margin-right: 4px;">Active</span>';
               }
-              if (!acc.isActive) {
-                vscode.postMessage({ type: 'switchAccount', accountId: acc.id });
-              }
-            });
 
-            const removeBtn = item.querySelector('.btn-remove-acc');
-            if (removeBtn) {
-              removeBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                vscode.postMessage({ type: 'logout', accountId: acc.id });
+              item.innerHTML = '<div class="acc-info">' +
+                '<div class="avatar">' + initial + '</div>' +
+                '<div>' +
+                  '<div class="acc-email">' + acc.email + '</div>' +
+                  '<div class="acc-sub">' + acc.alias + ' (' + acc.plan + ')</div>' +
+                '</div>' +
+              '</div>' +
+              '<div style="display: flex; align-items: center; gap: 4px;">' +
+                statusBadge +
+                '<button class="btn-icon btn-remove-acc" data-id="' + acc.id + '" title="Remove account">' +
+                  '<svg viewBox="0 0 24 24" class="icon icon-sm"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
+                '</button>' +
+              '</div>';
+
+              item.addEventListener('click', (e) => {
+                if (e.target.closest('.btn-remove-acc')) return;
+                if (acc.status === 'needs_login' || acc.status === 'logged_out' || acc.status === 'expired') {
+                  vscode.postMessage({ type: 'relogin', accountId: acc.id });
+                  return;
+                }
+                if (!acc.isActive) {
+                  vscode.postMessage({ type: 'switchAccount', accountId: acc.id });
+                }
               });
-            }
 
-            accountsList.appendChild(item);
-          });
+              const removeBtn = item.querySelector('.btn-remove-acc');
+              if (removeBtn) {
+                removeBtn.addEventListener('click', (e) => {
+                  e.stopPropagation();
+                  vscode.postMessage({ type: 'logout', accountId: acc.id });
+                });
+              }
+
+              accountsList.appendChild(item);
+            });
+          }
         }
       }
 
