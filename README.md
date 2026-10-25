@@ -30,15 +30,24 @@
 
 ---
 
-## 1-Minute Install (Recommended)
+## Quick Install (Recommended)
 
-### Option A: Install from GitHub Release (.vsix)
+### Option A: Install from VS Code Marketplace / IDE Extensions
 
-1. Head to the **[Releases](https://github.com/AdhirajPersonal/antigravity-argon-bridge/releases)** page and download `agy-argon-extension-1.0.0.vsix`.
+1. Open VS Code or Antigravity IDE.
+2. Open the Extensions sidebar (`Ctrl+Shift+X`).
+3. Search for **`Antigravity Argon Bridge`** (Publisher: `kobula`).
+4. Click **Install**.
+
+---
+
+### Option B: Install from GitHub Release (.vsix)
+
+1. Head to the **[Releases](https://github.com/AdhirajPersonal/antigravity-argon-bridge/releases)** page and download `antigravity-argon-bridge-1.0.1.vsix`.
 2. Open VS Code or Antigravity IDE and install it:
    * **Via Terminal**:
      ```bash
-     code --install-extension agy-argon-extension-1.0.0.vsix --force
+     code --install-extension antigravity-argon-bridge-1.0.1.vsix --force
      ```
    * **Via UI**: Press `Ctrl+Shift+P` -> Type `Extensions: Install from VSIX...` -> Select the downloaded file.
 3. The **Argon Bridge** tab will appear in your Activity Bar.
@@ -88,11 +97,15 @@ Once installed, the bridge automatically syncs into your IDE's `mcp_config.json`
 
 ---
 
-## Security & Sandboxing
+## Security, Privacy & Account Safety
 
-* **100% Local Credentials**: All session cookies, persistent contexts, and token logs are stored exclusively in your local home directory: `~/.gemini/argon-extension/`.
-* **Zero Telemetry Leaks**: No account cookies, prompts, or proprietary code ever pass through external servers or third-party proxies.
+* **100% Local Credentials**: All session cookies, persistent contexts, and token logs are stored exclusively in your local home directory (`~/.gemini/argon-extension/`).
+* **Zero Telemetry or Relays**: No account cookies, prompts, or proprietary code ever pass through external servers or third-party proxies. Everything communicates directly on `localhost`.
 * **Isolated Profiles**: Every Google account runs in its own sandboxed Chromium user-data profile to prevent cross-account session leakage.
+
+> [!NOTE]
+> **Account Safety & Best Practices**:
+> This extension automates web interactions on `gemini.google.com` locally via Playwright at human-level query pacing whenever your coding agent requests deep reasoning. While built for personal development workflows, Google's consumer terms discourage automated access. For maximum peace of mind and protection of your personal communications, we recommend linking a secondary Google account or a dedicated promo/trial account (such as carrier perks or student trials) rather than your primary personal or work email.
 
 ---
 
