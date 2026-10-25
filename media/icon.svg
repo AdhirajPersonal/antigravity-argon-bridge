@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none">
+  <defs>
+    <linearGradient id="argonGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#4285F4"/>
+      <stop offset="50%" stop-color="#9B72CB"/>
+      <stop offset="100%" stop-color="#D96570"/>
+    </linearGradient>
+  </defs>
+  <!-- Outer orbital ring -->
+  <ellipse cx="12" cy="12" rx="10" ry="4" stroke="url(#argonGrad)" stroke-width="1.6" transform="rotate(-30 12 12)"/>
+  <ellipse cx="12" cy="12" rx="10" ry="4" stroke="url(#argonGrad)" stroke-width="1.6" transform="rotate(30 12 12)"/>
+  <!-- Central nucleus spark -->
+  <circle cx="12" cy="12" r="2.8" fill="url(#argonGrad)"/>
+  <!-- Orbiting particles -->
+  <circle cx="5" cy="8" r="1.2" fill="#4285F4"/>
+  <circle cx="19" cy="16" r="1.2" fill="#D96570"/>
+  <circle cx="12" cy="2.5" r="1.2" fill="#9B72CB"/>
+</svg>

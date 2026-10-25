@@ -1,0 +1,109 @@
+{
+  "name": "agy-argon-extension",
+  "displayName": "Argon Bridge for Antigravity",
+  "description": "Antigravity extension bridging Google 4 Argon reasoning model into IDE with multi-account quota management and thinking depth controls.",
+  "version": "1.0.0",
+  "publisher": "antigravity",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "AI",
+    "Programming Languages",
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished",
+    "onView:agy-argon.mainView",
+    "onCommand:agy-argon.openPanel"
+  ],
+  "main": "dist/extension.js",
+  "types": "dist/extension.d.ts",
+  "bin": {
+    "agy-argon": "dist/bin/cli.js"
+  },
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "agy-argon-sidebar",
+          "title": "Argon Bridge",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "agy-argon-sidebar": [
+        {
+          "type": "webview",
+          "id": "agy-argon.mainView",
+          "name": "Argon Oracle & Accounts"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "agy-argon.openPanel",
+        "title": "Argon: Open Control Panel",
+        "icon": "$(layout-sidebar-left)"
+      },
+      {
+        "command": "agy-argon.resetThread",
+        "title": "Argon: Reset Conversation Thread (Start Fresh)",
+        "icon": "$(clear-all)"
+      },
+      {
+        "command": "agy-argon.login",
+        "title": "Argon: Add Google Account",
+        "icon": "$(account)"
+      },
+      {
+        "command": "agy-argon.switchAccount",
+        "title": "Argon: Switch Active Google Account",
+        "icon": "$(arrow-swap)"
+      },
+      {
+        "command": "agy-argon.setThinkingLevel",
+        "title": "Argon: Configure Thinking Mode (Auto/Low/Med/High)",
+        "icon": "$(gear)"
+      },
+      {
+        "command": "agy-argon.refreshQuota",
+        "title": "Argon: Refresh Live Quota Limits",
+        "icon": "$(refresh)"
+      }
+    ]
+  },
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts",
+    "cli": "tsx src/bin/cli.ts",
+    "package": "vsce package",
+    "vscode:uninstall": "node ./dist/scripts/uninstall.js",
+    "postinstall": "playwright install chromium"
+  },
+  "keywords": [
+    "antigravity",
+    "mcp",
+    "gemini",
+    "argon",
+    "ai",
+    "google"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.6.1",
+    "commander": "^12.1.0",
+    "playwright": "^1.49.1",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/vscode": "^1.85.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}

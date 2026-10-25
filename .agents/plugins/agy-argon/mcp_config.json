@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "agy-argon": {
+      "command": "node",
+      "args": [
+        "c:/Users/roblo/OneDrive/Documents/personalProjects/agy-argon-extension/dist/index.js"
+      ]
+    }
+  }
+}
