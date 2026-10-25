@@ -1,7 +1,7 @@
 <div align="center">
 
 <p align="center">
-  <img src="media/icon.svg" width="96" height="96" alt="Argon Bridge Logo" />
+  <img src="media/icon.png" width="96" height="96" alt="Argon Bridge Logo" />
 </p>
 
 # ⚛️ Antigravity Argon Bridge

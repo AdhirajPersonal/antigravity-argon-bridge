@@ -1,9 +1,14 @@
 {
-  "name": "agy-argon-extension",
-  "displayName": "Argon Bridge for Antigravity",
-  "description": "Antigravity extension bridging Google 4 Argon reasoning model into IDE with multi-account quota management and thinking depth controls.",
+  "name": "antigravity-argon-bridge",
+  "displayName": "Antigravity Argon Bridge",
+  "description": "Google 4 Argon Reasoning Model Bridge for Antigravity & VS Code with multi-account rotation and live quota tracking.",
   "version": "1.0.0",
-  "publisher": "antigravity",
+  "publisher": "adhirajpersonal",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AdhirajPersonal/antigravity-argon-bridge.git"
+  },
+  "icon": "media/icon.png",
   "engines": {
     "vscode": "^1.85.0"
   },
