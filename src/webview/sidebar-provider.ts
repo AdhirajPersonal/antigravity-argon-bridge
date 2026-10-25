@@ -297,7 +297,7 @@ export class ArgonSidebarProvider implements vscode.WebviewViewProvider {
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}'; font-src ${webview.cspSource}; img-src ${webview.cspSource} data: https:;">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}' ${webview.cspSource} 'unsafe-inline'; font-src ${webview.cspSource}; img-src ${webview.cspSource} data: https:;">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Argon Bridge</title>
   <style>
@@ -1077,241 +1077,279 @@ export class ArgonSidebarProvider implements vscode.WebviewViewProvider {
     <div id="queryThinking" class="thinking-box" style="display: none;"></div>
     <div id="queryResponse" class="response-box" style="display: none;"></div>
   </div>
-
   <script nonce="${nonce}">
-    try {
-      const vscode = acquireVsCodeApi();
-
-      const statusBadge = document.getElementById('statusBadge');
-      const statusText = document.getElementById('statusText');
-      const planBadge = document.getElementById('planBadge');
-      const currentUsageTxt = document.getElementById('currentUsageTxt');
-      const currentUsageBar = document.getElementById('currentUsageBar');
-      const currentResetTxt = document.getElementById('currentResetTxt');
-      const weeklyUsageTxt = document.getElementById('weeklyUsageTxt');
-      const weeklyUsageBar = document.getElementById('weeklyUsageBar');
-      const weeklyResetTxt = document.getElementById('weeklyResetTxt');
-      const todayTurns = document.getElementById('todayTurns');
-      const todayTokens = document.getElementById('todayTokens');
-      const accountsList = document.getElementById('accountsList');
-      const accCount = document.getElementById('accCount');
-      const thinkingDesc = document.getElementById('thinkingDesc');
-      const thinkingNote = document.getElementById('thinkingNote');
-      const threadSessionName = document.getElementById('threadSessionName');
-      const threadStatus = document.getElementById('threadStatus');
-
-      const queryInput = document.getElementById('queryInput');
-      const btnSubmitQuery = document.getElementById('btnSubmitQuery');
-      const btnSubmitQueryTxt = document.getElementById('btnSubmitQueryTxt');
-      const queryThinking = document.getElementById('queryThinking');
-      const queryResponse = document.getElementById('queryResponse');
-      const btnRefreshQuota = document.getElementById('btnRefreshQuota');
-
-      btnRefreshQuota.addEventListener('click', () => {
-        btnRefreshQuota.classList.add('is-syncing');
-        vscode.postMessage({ type: 'refresh' });
-      });
-
-      document.getElementById('btnResetThread').addEventListener('click', () => {
-        vscode.postMessage({ type: 'resetThread' });
-      });
-
-      document.getElementById('btnResetThreadExplicit').addEventListener('click', () => {
-        vscode.postMessage({ type: 'resetThread' });
-      });
-
-      document.getElementById('btnAddAccount').addEventListener('click', () => {
-        vscode.postMessage({ type: 'login' });
-      });
-
-      document.querySelectorAll('.seg-item').forEach(el => {
-        el.addEventListener('click', () => {
-          const mode = el.getAttribute('data-mode');
-          vscode.postMessage({ type: 'setThinkingMode', mode });
-        });
-      });
-
-      btnSubmitQuery.addEventListener('click', () => {
-        const prompt = queryInput.value.trim();
-        if (!prompt) return;
-
-        // Diagnostic quick test query is always performed with low thinking depth for rapid round-trip verification
-        vscode.postMessage({ type: 'askQuery', prompt, thinkingLevel: 'low' });
-      });
-
-      window.addEventListener('message', (event) => {
-        const msg = event.data;
-        if (!msg) return;
-
-        switch (msg.type) {
-          case 'stateUpdate':
-            renderState(msg.data);
-            btnRefreshQuota.classList.remove('is-syncing');
-            break;
-          case 'queryStart':
-            btnSubmitQuery.disabled = true;
-            btnSubmitQueryTxt.textContent = 'Testing (Low Mode)...';
-            queryResponse.style.display = 'none';
-            queryThinking.style.display = 'none';
-            break;
-          case 'querySuccess':
-            btnSubmitQuery.disabled = false;
-            btnSubmitQueryTxt.textContent = 'Test Setup (Fast Round-Trip)';
-            if (msg.result.thinkingProcess) {
-              queryThinking.style.display = 'block';
-              queryThinking.textContent = 'Thought Process:\\n' + msg.result.thinkingProcess;
-            }
-            queryResponse.style.display = 'block';
-            queryResponse.textContent = msg.result.response;
-            break;
-          case 'queryError':
-            btnSubmitQuery.disabled = false;
-            btnSubmitQueryTxt.textContent = 'Test Setup (Fast Round-Trip)';
-            queryResponse.style.display = 'block';
-            queryResponse.textContent = 'Error: ' + msg.error;
-            break;
-        }
-      });
-
-      function renderState(data) {
-        if (!data) return;
-        const active = data.activeAccount;
-        if (active) {
-          if (active.status === 'rate-limited') {
-            statusText.textContent = 'RATE-LIMITED';
-            statusBadge.className = 'badge-status rate-limited';
-          } else if (active.status === 'needs_login' || active.status === 'logged_out' || active.status === 'expired') {
-            statusText.textContent = 'NEEDS LOGIN';
-            statusBadge.className = 'badge-status needs-login';
-          } else {
-            statusText.textContent = 'READY';
-            statusBadge.className = 'badge-status';
-          }
-          planBadge.textContent = active.plan;
-        } else {
-          statusText.textContent = 'NO ACCOUNT';
-          statusBadge.className = 'badge-status needs-login';
-        }
-
-        if (data.officialLimits) {
-          const cur = data.officialLimits.currentUsagePercent;
-          currentUsageTxt.textContent = cur + '%';
-          currentUsageBar.style.width = Math.min(100, cur) + '%';
-          currentUsageBar.className = cur > 85 ? 'progress-bar-fill warn' : 'progress-bar-fill';
-          currentResetTxt.textContent = 'Resets at: ' + data.officialLimits.currentResetTime;
-
-          const wk = data.officialLimits.weeklyLimitPercent;
-          weeklyUsageTxt.textContent = wk + '%';
-          weeklyUsageBar.style.width = Math.min(100, wk) + '%';
-          weeklyResetTxt.textContent = 'Resets on: ' + data.officialLimits.weeklyResetDate;
-        }
-
-        if (data.localMetrics) {
-          todayTurns.textContent = data.localMetrics.todayTurns;
-          todayTokens.textContent = '~' + data.localMetrics.todayTokens;
-        }
-
-        if (data.settings) {
-          const currentMode = data.settings.forcedThinkingLevel;
-          document.querySelectorAll('.seg-item').forEach(el => {
-            el.className = el.getAttribute('data-mode') === currentMode ? 'seg-item active' : 'seg-item';
-          });
-
-          if (currentMode === 'auto') {
-            thinkingDesc.textContent = 'Dynamic';
-            thinkingNote.textContent = 'Auto: Agent dynamically picks thinking depth based on complexity.';
-          } else {
-            thinkingDesc.textContent = 'Locked: ' + currentMode.toUpperCase();
-            thinkingNote.textContent = 'Hard limit active: All consultations will use ' + currentMode.toUpperCase() + ' thinking.';
-          }
-        }
-
-        if (data.sessionId) {
-          threadSessionName.textContent = data.sessionId;
-        }
-        if (data.thread && data.thread.threadUrl) {
-          const shortUrl = data.thread.threadUrl.replace('https://gemini.google.com/app/', '');
-          threadStatus.innerHTML = '<span style="color: var(--accent-blue);">Active: </span><a href="' + data.thread.threadUrl + '" style="color: var(--accent-blue); text-decoration: underline;" target="_blank">#' + shortUrl + '</a>';
-        } else {
-          threadStatus.textContent = 'Fresh conversation ready';
-        }
-
-        if (data.accounts) {
-          accCount.textContent = data.accounts.length + ' connected';
-          accountsList.innerHTML = '';
-
-          if (data.accounts.length === 0) {
-            accountsList.innerHTML = '<div style="padding: 12px 8px; text-align: center; background: rgba(255, 255, 255, 0.02); border: 1px dashed rgba(255, 255, 255, 0.08); border-radius: 6px; margin-bottom: 8px;">' +
-              '<div style="font-size: 11px; font-weight: 600; color: var(--text); margin-bottom: 3px;">No Account Connected</div>' +
-              '<div style="font-size: 10px; color: var(--text-muted); line-height: 1.4;">Click below to connect your Google Pro or claimed promotional account.</div>' +
-            '</div>';
-          } else {
-            data.accounts.forEach(acc => {
-              const item = document.createElement('div');
-              item.className = acc.isActive ? 'account-item active' : 'account-item';
-
-              const initial = (acc.email || 'A').charAt(0).toUpperCase();
-              let statusBadge = '';
-              if (acc.status === 'needs_login' || acc.status === 'logged_out' || acc.status === 'expired') {
-                statusBadge = '<span style="color: #ef4444; font-size: 10px; background: rgba(239, 68, 68, 0.15); padding: 2px 6px; border-radius: 4px; margin-right: 4px;">Needs Login</span>';
-              } else if (acc.status === 'rate-limited') {
-                statusBadge = '<span style="color: var(--amber); font-size: 10px; background: rgba(245, 158, 11, 0.15); padding: 2px 6px; border-radius: 4px; margin-right: 4px;">Limit Reached</span>';
-              } else if (acc.isActive) {
-                statusBadge = '<span style="color: var(--accent-blue); font-weight: 700; font-size: 11px; margin-right: 4px;">Active</span>';
-              }
-
-              item.innerHTML = '<div class="acc-info">' +
-                '<div class="avatar">' + initial + '</div>' +
-                '<div>' +
-                  '<div class="acc-email">' + acc.email + '</div>' +
-                  '<div class="acc-sub">' + acc.alias + ' (' + acc.plan + ')</div>' +
-                '</div>' +
-              '</div>' +
-              '<div style="display: flex; align-items: center; gap: 4px;">' +
-                statusBadge +
-                '<button class="btn-icon btn-remove-acc" data-id="' + acc.id + '" title="Remove account">' +
-                  '<svg viewBox="0 0 24 24" class="icon icon-sm"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
-                '</button>' +
-              '</div>';
-
-              item.addEventListener('click', (e) => {
-                if (e.target.closest('.btn-remove-acc')) return;
-                if (acc.status === 'needs_login' || acc.status === 'logged_out' || acc.status === 'expired') {
-                  vscode.postMessage({ type: 'relogin', accountId: acc.id });
-                  return;
-                }
-                if (!acc.isActive) {
-                  vscode.postMessage({ type: 'switchAccount', accountId: acc.id });
-                }
-              });
-
-              const removeBtn = item.querySelector('.btn-remove-acc');
-              if (removeBtn) {
-                removeBtn.addEventListener('click', (e) => {
-                  e.stopPropagation();
-                  vscode.postMessage({ type: 'logout', accountId: acc.id });
-                });
-              }
-
-              accountsList.appendChild(item);
-            });
-          }
-        }
-      }
-
-      // Immediately render accounts and quota synchronously on mount
+    (function() {
       try {
-        const initialData = ${initialStateJson};
-        renderState(initialData);
-      } catch (renderErr) {
-        console.error('Initial renderState error:', renderErr);
-      }
+        const vscode = acquireVsCodeApi();
 
-      // Signal to host that webview DOM and listeners are ready
-      vscode.postMessage({ type: 'ready' });
-    } catch (err) {
-      console.error('Webview initialization error:', err);
-    }
+        const statusBadge = document.getElementById('statusBadge');
+        const statusText = document.getElementById('statusText');
+        const planBadge = document.getElementById('planBadge');
+        const currentUsageTxt = document.getElementById('currentUsageTxt');
+        const currentUsageBar = document.getElementById('currentUsageBar');
+        const currentResetTxt = document.getElementById('currentResetTxt');
+        const weeklyUsageTxt = document.getElementById('weeklyUsageTxt');
+        const weeklyUsageBar = document.getElementById('weeklyUsageBar');
+        const weeklyResetTxt = document.getElementById('weeklyResetTxt');
+        const todayTurns = document.getElementById('todayTurns');
+        const todayTokens = document.getElementById('todayTokens');
+        const accountsList = document.getElementById('accountsList');
+        const accCount = document.getElementById('accCount');
+        const thinkingDesc = document.getElementById('thinkingDesc');
+        const thinkingNote = document.getElementById('thinkingNote');
+        const threadSessionName = document.getElementById('threadSessionName');
+        const threadStatus = document.getElementById('threadStatus');
+
+        const queryInput = document.getElementById('queryInput');
+        const btnSubmitQuery = document.getElementById('btnSubmitQuery');
+        const btnSubmitQueryTxt = document.getElementById('btnSubmitQueryTxt');
+        const queryThinking = document.getElementById('queryThinking');
+        const queryResponse = document.getElementById('queryResponse');
+        const btnRefreshQuota = document.getElementById('btnRefreshQuota');
+
+        if (btnRefreshQuota) {
+          btnRefreshQuota.addEventListener('click', () => {
+            btnRefreshQuota.classList.add('is-syncing');
+            vscode.postMessage({ type: 'refresh' });
+          });
+        }
+
+        const btnResetThread = document.getElementById('btnResetThread');
+        if (btnResetThread) {
+          btnResetThread.addEventListener('click', () => {
+            vscode.postMessage({ type: 'resetThread' });
+          });
+        }
+
+        const btnResetThreadExplicit = document.getElementById('btnResetThreadExplicit');
+        if (btnResetThreadExplicit) {
+          btnResetThreadExplicit.addEventListener('click', () => {
+            vscode.postMessage({ type: 'resetThread' });
+          });
+        }
+
+        const btnAddAccount = document.getElementById('btnAddAccount');
+        if (btnAddAccount) {
+          btnAddAccount.addEventListener('click', () => {
+            vscode.postMessage({ type: 'login' });
+          });
+        }
+
+        document.querySelectorAll('.seg-item').forEach(el => {
+          el.addEventListener('click', () => {
+            const mode = el.getAttribute('data-mode');
+            vscode.postMessage({ type: 'setThinkingMode', mode });
+          });
+        });
+
+        if (btnSubmitQuery && queryInput) {
+          btnSubmitQuery.addEventListener('click', () => {
+            const prompt = queryInput.value.trim();
+            if (!prompt) return;
+            vscode.postMessage({ type: 'askQuery', prompt, thinkingLevel: 'low' });
+          });
+        }
+
+        window.addEventListener('message', (event) => {
+          const msg = event.data;
+          if (!msg) return;
+
+          switch (msg.type) {
+            case 'stateUpdate':
+              renderState(msg.data);
+              if (btnRefreshQuota) btnRefreshQuota.classList.remove('is-syncing');
+              break;
+            case 'queryStart':
+              if (btnSubmitQuery) btnSubmitQuery.disabled = true;
+              if (btnSubmitQueryTxt) btnSubmitQueryTxt.textContent = 'Testing (Low Mode)...';
+              if (queryResponse) queryResponse.style.display = 'none';
+              if (queryThinking) queryThinking.style.display = 'none';
+              break;
+            case 'querySuccess':
+              if (btnSubmitQuery) btnSubmitQuery.disabled = false;
+              if (btnSubmitQueryTxt) btnSubmitQueryTxt.textContent = 'Test Setup (Fast Round-Trip)';
+              if (msg.result && msg.result.thinkingProcess && queryThinking) {
+                queryThinking.style.display = 'block';
+                queryThinking.textContent = 'Thought Process:\\n' + msg.result.thinkingProcess;
+              }
+              if (msg.result && queryResponse) {
+                queryResponse.style.display = 'block';
+                queryResponse.textContent = msg.result.response || 'Success';
+              }
+              break;
+            case 'queryError':
+              if (btnSubmitQuery) btnSubmitQuery.disabled = false;
+              if (btnSubmitQueryTxt) btnSubmitQueryTxt.textContent = 'Test Setup (Fast Round-Trip)';
+              if (queryResponse) {
+                queryResponse.style.display = 'block';
+                queryResponse.textContent = 'Error: ' + msg.error;
+              }
+              break;
+          }
+        });
+
+        function renderState(data) {
+          if (!data) return;
+          const active = data.activeAccount;
+          if (active) {
+            if (statusText) {
+              if (active.status === 'rate-limited') {
+                statusText.textContent = 'RATE-LIMITED';
+              } else if (active.status === 'needs_login' || active.status === 'logged_out' || active.status === 'expired') {
+                statusText.textContent = 'NEEDS LOGIN';
+              } else {
+                statusText.textContent = 'READY';
+              }
+            }
+            if (statusBadge) {
+              if (active.status === 'rate-limited') {
+                statusBadge.className = 'badge-status rate-limited';
+              } else if (active.status === 'needs_login' || active.status === 'logged_out' || active.status === 'expired') {
+                statusBadge.className = 'badge-status needs-login';
+              } else {
+                statusBadge.className = 'badge-status';
+              }
+            }
+            if (planBadge) planBadge.textContent = active.plan || 'PRO';
+          } else {
+            if (statusText) statusText.textContent = 'NO ACCOUNT';
+            if (statusBadge) statusBadge.className = 'badge-status needs-login';
+            if (planBadge) planBadge.textContent = 'OFFLINE';
+          }
+
+          if (data.officialLimits) {
+            const cur = data.officialLimits.currentUsagePercent || 0;
+            if (currentUsageTxt) currentUsageTxt.textContent = cur + '%';
+            if (currentUsageBar) {
+              currentUsageBar.style.width = Math.min(100, cur) + '%';
+              currentUsageBar.className = cur > 85 ? 'progress-bar-fill warn' : 'progress-bar-fill';
+            }
+            if (currentResetTxt) currentResetTxt.textContent = 'Resets at: ' + (data.officialLimits.currentResetTime || '--:--');
+
+            const wk = data.officialLimits.weeklyLimitPercent || 0;
+            if (weeklyUsageTxt) weeklyUsageTxt.textContent = wk + '%';
+            if (weeklyUsageBar) weeklyUsageBar.style.width = Math.min(100, wk) + '%';
+            if (weeklyResetTxt) weeklyResetTxt.textContent = 'Resets on: ' + (data.officialLimits.weeklyResetDate || '--');
+          } else {
+            if (currentUsageTxt) currentUsageTxt.textContent = '0%';
+            if (currentUsageBar) currentUsageBar.style.width = '0%';
+            if (currentResetTxt) currentResetTxt.textContent = 'Resets at: --:--';
+            if (weeklyUsageTxt) weeklyUsageTxt.textContent = '0%';
+            if (weeklyUsageBar) weeklyUsageBar.style.width = '0%';
+            if (weeklyResetTxt) weeklyResetTxt.textContent = 'Resets on: --';
+          }
+
+          if (data.localMetrics) {
+            if (todayTurns) todayTurns.textContent = String(data.localMetrics.todayTurns || 0);
+            if (todayTokens) todayTokens.textContent = '~' + String(data.localMetrics.todayTokens || 0);
+          }
+
+          if (data.settings) {
+            const currentMode = data.settings.forcedThinkingLevel || 'auto';
+            document.querySelectorAll('.seg-item').forEach(el => {
+              el.className = el.getAttribute('data-mode') === currentMode ? 'seg-item active' : 'seg-item';
+            });
+
+            if (thinkingDesc && thinkingNote) {
+              if (currentMode === 'auto') {
+                thinkingDesc.textContent = 'Dynamic';
+                thinkingNote.textContent = 'Auto: Agent dynamically picks thinking depth based on complexity.';
+              } else {
+                thinkingDesc.textContent = 'Locked: ' + currentMode.toUpperCase();
+                thinkingNote.textContent = 'Hard limit active: All consultations will use ' + currentMode.toUpperCase() + ' thinking.';
+              }
+            }
+          }
+
+          if (data.sessionId && threadSessionName) {
+            threadSessionName.textContent = data.sessionId;
+          }
+          if (threadStatus) {
+            if (data.thread && data.thread.threadUrl) {
+              const shortUrl = data.thread.threadUrl.replace('https://gemini.google.com/app/', '');
+              threadStatus.innerHTML = '<span style="color: var(--accent-blue);">Active: </span><a href="' + data.thread.threadUrl + '" style="color: var(--accent-blue); text-decoration: underline;" target="_blank">#' + shortUrl + '</a>';
+            } else {
+              threadStatus.textContent = 'Fresh conversation ready';
+            }
+          }
+
+          if (data.accounts && accountsList) {
+            if (accCount) accCount.textContent = data.accounts.length + ' connected';
+            accountsList.innerHTML = '';
+
+            if (data.accounts.length === 0) {
+              accountsList.innerHTML = '<div style="padding: 12px 8px; text-align: center; background: rgba(255, 255, 255, 0.02); border: 1px dashed rgba(255, 255, 255, 0.08); border-radius: 6px; margin-bottom: 8px;">' +
+                '<div style="font-size: 11px; font-weight: 600; color: var(--text); margin-bottom: 3px;">No Account Connected</div>' +
+                '<div style="font-size: 10px; color: var(--text-muted); line-height: 1.4;">Click below to connect your Google Pro or claimed promotional account.</div>' +
+              '</div>';
+            } else {
+              data.accounts.forEach(acc => {
+                const item = document.createElement('div');
+                item.className = acc.isActive ? 'account-item active' : 'account-item';
+
+                const initial = (acc.email || 'A').charAt(0).toUpperCase();
+                let accBadgeHtml = '';
+                if (acc.status === 'needs_login' || acc.status === 'logged_out' || acc.status === 'expired') {
+                  accBadgeHtml = '<span style="color: #ef4444; font-size: 10px; background: rgba(239, 68, 68, 0.15); padding: 2px 6px; border-radius: 4px; margin-right: 4px;">Needs Login</span>';
+                } else if (acc.status === 'rate-limited') {
+                  accBadgeHtml = '<span style="color: var(--amber); font-size: 10px; background: rgba(245, 158, 11, 0.15); padding: 2px 6px; border-radius: 4px; margin-right: 4px;">Limit Reached</span>';
+                } else if (acc.isActive) {
+                  accBadgeHtml = '<span style="color: var(--accent-blue); font-weight: 700; font-size: 11px; margin-right: 4px;">Active</span>';
+                }
+
+                item.innerHTML = '<div class="acc-info">' +
+                  '<div class="avatar">' + initial + '</div>' +
+                  '<div>' +
+                    '<div class="acc-email">' + (acc.email || '') + '</div>' +
+                    '<div class="acc-sub">' + (acc.alias || 'Account') + ' (' + (acc.plan || 'PRO') + ')</div>' +
+                  '</div>' +
+                '</div>' +
+                '<div style="display: flex; align-items: center; gap: 4px;">' +
+                  accBadgeHtml +
+                  '<button class="btn-icon btn-remove-acc" data-id="' + acc.id + '" title="Remove account">' +
+                    '<svg viewBox="0 0 24 24" class="icon icon-sm"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
+                  '</button>' +
+                '</div>';
+
+                item.addEventListener('click', (e) => {
+                  if (e.target.closest('.btn-remove-acc')) return;
+                  if (acc.status === 'needs_login' || acc.status === 'logged_out' || acc.status === 'expired') {
+                    vscode.postMessage({ type: 'relogin', accountId: acc.id });
+                    return;
+                  }
+                  if (!acc.isActive) {
+                    vscode.postMessage({ type: 'switchAccount', accountId: acc.id });
+                  }
+                });
+
+                const removeBtn = item.querySelector('.btn-remove-acc');
+                if (removeBtn) {
+                  removeBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    vscode.postMessage({ type: 'logout', accountId: acc.id });
+                  });
+                }
+
+                accountsList.appendChild(item);
+              });
+            }
+          }
+        }
+
+        // Immediately render synchronously on load
+        try {
+          const initialData = ${initialStateJson};
+          renderState(initialData);
+        } catch (renderErr) {
+          console.error('Initial renderState error:', renderErr);
+        }
+
+        // Notify extension host that DOM is ready to receive state
+        vscode.postMessage({ type: 'ready' });
+      } catch (err) {
+        console.error('Webview initialization error:', err);
+      }
+    })();
   </script>
 </body>
 </html>`;
