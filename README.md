@@ -1,10 +1,6 @@
 <div align="center">
 
-<p align="center">
-  <img src="media/icon.png" width="96" height="96" alt="Argon Bridge Logo" />
-</p>
-
-# ⚛️ Antigravity Argon Bridge
+# Antigravity Argon Bridge
 ### Google 4 Argon Reasoning Engine for the Antigravity Agentic IDE & MCP Ecosystem
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](https://github.com/AdhirajPersonal/antigravity-argon-bridge/blob/main/LICENSE)
@@ -13,7 +9,7 @@
 [![Reasoning Engine](https://img.shields.io/badge/Model-Google%204%20Argon-38bdf8?style=for-the-badge&logo=google-gemini&logoColor=white)](https://gemini.google.com)
 [![Protocol](https://img.shields.io/badge/Protocol-Model%20Context%20Protocol%20(MCP)-a855f7?style=for-the-badge)](https://modelcontextprotocol.io)
 
-[Quick Install](#-1-minute-install-recommended) · [What You Get](#-what-you-get) · [How It Works](#-how-it-works) · [MCP Tools](#-native-mcp-tools) · [Publish to Marketplace](#-publishing-to-vs-code-marketplace)
+[Quick Install](#1-minute-install-recommended) · [What You Get](#what-you-get) · [Account Setup](#account-setup-2-easy-steps) · [MCP Tools](#native-mcp-tools) · [Security](#security--sandboxing)
 
 </div>
 
@@ -23,18 +19,18 @@
 
 ---
 
-## ⚡ What You Get
+## What You Get
 
-* **🧠 Deep Reasoning on Demand**: Directly query Google's flagship **4 Argon** multi-pass reasoning engine from your Antigravity workflows with variable thinking depths (`Low`, `Medium`, `High`, or `Auto`).
-* **👥 Automatic Multi-Account Failover**: Connect multiple Google Pro / Gemini Advanced accounts. When one account hits Google's rolling rate limit or cooldown, the bridge transparently rotates to the next available account without dropping your turn.
-* **🛡️ Stealth CDP Automation Engine**: Playwright-powered Chromium driver utilizing CDP-level evasion hooks (`navigator.webdriver` spoofing, authentic Chrome geometry, localized persistent storage) that bypass anti-bot challenges and safely preserve Google carrier SSO/passkey sessions.
-* **📊 Quantum Sync & Live Quota Dashboard**: Ultra-fast glassmorphic VS Code sidebar displaying real-time daily turns, estimated token usage, and live Google Pro rolling reset timers.
-* **🧵 Workspace-Isolated Memory Threads**: Maintains continuous, isolated chat sessions per project folder so context never cross-contaminates across accounts or distinct repositories.
-* **🔌 Dual-Mode Integration**: Operates simultaneously as a visual **VS Code Sidebar Control Panel** and as a standard **Model Context Protocol (MCP)** server for autonomous coding agents (Gemini 3.8 Flash, Claude Code, Cline, Cursor, Roo-Code).
+* **Deep Reasoning on Demand**: Directly query Google's flagship **4 Argon** multi-pass reasoning engine from your Antigravity workflows with variable thinking depths (`Low`, `Medium`, `High`, or `Auto`).
+* **Automatic Multi-Account Failover**: Connect multiple Google Pro / Gemini Advanced accounts. When one account hits Google's rolling rate limit or cooldown, the bridge transparently rotates to the next available account without dropping your turn.
+* **Stealth CDP Automation Engine**: Playwright-powered Chromium driver utilizing CDP-level evasion hooks (`navigator.webdriver` spoofing, authentic Chrome geometry, localized persistent storage) that bypass anti-bot challenges and safely preserve Google carrier SSO/passkey sessions.
+* **Quantum Sync & Live Quota Dashboard**: Fast glassmorphic VS Code sidebar displaying real-time daily turns, estimated token usage, and live Google Pro rolling reset timers.
+* **Workspace-Isolated Memory Threads**: Maintains continuous, isolated chat sessions per project folder so context never cross-contaminates across accounts or distinct repositories.
+* **Dual-Mode Integration**: Operates simultaneously as a visual **VS Code Sidebar Control Panel** and as a standard **Model Context Protocol (MCP)** server for autonomous coding agents (Gemini 3.8 Flash, Claude Code, Cline, Cursor, Roo-Code).
 
 ---
 
-## 🚀 1-Minute Install (Recommended)
+## 1-Minute Install (Recommended)
 
 ### Option A: Install from GitHub Release (.vsix)
 
@@ -45,7 +41,7 @@
      code --install-extension agy-argon-extension-1.0.0.vsix --force
      ```
    * **Via UI**: Press `Ctrl+Shift+P` -> Type `Extensions: Install from VSIX...` -> Select the downloaded file.
-3. Done! The **Argon Bridge** emblem will appear in your Activity Bar.
+3. The **Argon Bridge** tab will appear in your Activity Bar.
 
 ---
 
@@ -67,20 +63,20 @@ code --install-extension agy-argon-extension-1.0.0.vsix --force
 
 ---
 
-## ⚙️ Account Setup (2 Easy Steps)
+## Account Setup (2 Easy Steps)
 
 1. Click the **Argon Bridge** tab in the VS Code Activity Bar.
 2. Under **Google Accounts**, click **`+ Add Google Pro Account`**:
    * An authentic Chromium window will open.
    * Sign into your Google account (2FA, passkeys, and carrier SSO are fully supported).
-   * Once Google Gemini opens, the window closes automatically and your account is linked!
+   * Once Google Gemini opens, the window closes automatically and your account is linked.
 
-> [!TIP]
+> [!NOTE]
 > **Have multiple accounts?** Click `+ Add Google Pro Account` again to connect your backup accounts. Argon Bridge will automatically pool their rate limits together.
 
 ---
 
-## 🛠️ Native MCP Tools
+## Native MCP Tools
 
 Once installed, the bridge automatically syncs into your IDE's `mcp_config.json`, giving all your assistant agents native access to these tools:
 
@@ -92,43 +88,7 @@ Once installed, the bridge automatically syncs into your IDE's `mcp_config.json`
 
 ---
 
-## 📦 Publishing to VS Code Marketplace & Open VSX
-
-Want to distribute this extension to millions of users on the official [VS Code Marketplace](https://marketplace.visualstudio.com/) and [Open VSX Registry](https://open-vsx.org/)?
-
-### 1. Create a Publisher Account
-1. Sign in to the [Visual Studio Marketplace Management Portal](https://marketplace.visualstudio.com/manage).
-2. Create a unique **Publisher ID** (e.g. `adhirajpersonal`).
-3. Generate a **Personal Access Token (PAT)** from Azure DevOps with `Marketplace (Manage)` scope.
-
-### 2. Update `package.json`
-In your `package.json`, set your publisher ID:
-```json
-{
-  "name": "antigravity-argon-bridge",
-  "publisher": "YOUR_PUBLISHER_ID",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/AdhirajPersonal/antigravity-argon-bridge.git"
-  }
-}
-```
-
-### 3. Publish with VSCE
-```bash
-# Login with your publisher token
-npx @vscode/vsce login YOUR_PUBLISHER_ID
-
-# Publish directly to the Visual Studio Marketplace
-npx @vscode/vsce publish
-
-# (Optional) Publish to Open VSX for VSCodium / Antigravity / Cursor
-npx ovsx publish agy-argon-extension-1.0.0.vsix -p YOUR_OPEN_VSX_TOKEN
-```
-
----
-
-## 🔒 Security & Sandboxing
+## Security & Sandboxing
 
 * **100% Local Credentials**: All session cookies, persistent contexts, and token logs are stored exclusively in your local home directory: `~/.gemini/argon-extension/`.
 * **Zero Telemetry Leaks**: No account cookies, prompts, or proprietary code ever pass through external servers or third-party proxies.
@@ -136,6 +96,6 @@ npx ovsx publish agy-argon-extension-1.0.0.vsix -p YOUR_OPEN_VSX_TOKEN
 
 ---
 
-## 📄 License
+## License
 
 Distributed under the [MIT License](LICENSE).
