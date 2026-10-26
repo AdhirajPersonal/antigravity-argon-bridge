@@ -2,7 +2,7 @@
   "name": "antigravity-argon-bridge",
   "displayName": "Antigravity Argon Bridge",
   "description": "Google 4 Argon Reasoning Model Bridge for Antigravity & VS Code with multi-account rotation and live quota tracking.",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "publisher": "kobula",
   "repository": {
     "type": "git",
