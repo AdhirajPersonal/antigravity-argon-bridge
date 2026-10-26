@@ -9,7 +9,7 @@
 [![Reasoning Engine](https://img.shields.io/badge/Model-Google%204%20Argon-38bdf8?style=for-the-badge&logo=google-gemini&logoColor=white)](https://gemini.google.com)
 [![Protocol](https://img.shields.io/badge/Protocol-Model%20Context%20Protocol%20(MCP)-a855f7?style=for-the-badge)](https://modelcontextprotocol.io)
 
-[Quick Install](#1-minute-install-recommended) · [What You Get](#what-you-get) · [Account Setup](#account-setup-2-easy-steps) · [MCP Tools](#native-mcp-tools) · [Security](#security--sandboxing)
+[Quick Install](#1-minute-install-recommended) · [Chromium Setup](#first-run-requirement-playwright-chromium) · [Account Setup](#account-setup-2-easy-steps) · [MCP Tools](#native-mcp-tools) · [Security](#security--sandboxing)
 
 </div>
 
@@ -62,6 +62,8 @@ git clone https://github.com/AdhirajPersonal/antigravity-argon-bridge.git
 cd antigravity-argon-bridge
 
 # 2. Install dependencies & build
+#    `npm install` runs the postinstall hook that downloads the Playwright Chromium
+#    build pinned by this checkout into ~/Library/Caches/ms-playwright (macOS).
 npm install
 npm run build
 
@@ -69,6 +71,35 @@ npm run build
 npx @vscode/vsce package --no-dependencies
 code --install-extension agy-argon-extension-1.0.0.vsix --force
 ```
+
+---
+
+## First-Run Requirement: Playwright Chromium
+
+The Chromium build that Argon drives is **not bundled inside the VSIX** — it is pinned to an exact
+revision by the bundled `playwright-core` and has to be downloaded once per Playwright version.
+
+Marketplace / VSIX installs never run `npm install`, so this one-off download is **not** performed
+for you. On a fresh install (or after an update that bumps Playwright), run **one** of these:
+
+* **Recommended (one click):** Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`) → **`Argon: Install / Repair Chromium Browser`**.
+  If you forget, the "Add Google Pro Account" flow detects the missing browser and offers a **Download Chromium** button.
+* **Terminal:** point it at the extension's *own* Playwright CLI so the revision matches exactly:
+
+  ```bash
+  # macOS / Linux
+  node "<extension-dir>/node_modules/playwright-core/cli.js" install chromium
+  # Windows
+  node "<extension-dir>\node_modules\playwright-core\cli.js" install chromium
+  ```
+
+  `<extension-dir>` is `~/.vscode/extensions/kobula.antigravity-argon-bridge-<version>` or
+  `~/.antigravity-ide/extensions/kobula.antigravity-argon-bridge-<version>`.
+
+> [!IMPORTANT]
+> Do **not** use a bare global `npx playwright install chromium`: if your global Playwright differs
+> from the bundled one it downloads a *different* revision and the launch still fails with
+> `Executable doesn't exist at .../chromium-<rev>/...`.
 
 ---
 

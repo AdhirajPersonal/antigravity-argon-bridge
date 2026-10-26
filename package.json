@@ -76,6 +76,11 @@
         "command": "agy-argon.refreshQuota",
         "title": "Argon: Refresh Live Quota Limits",
         "icon": "$(refresh)"
+      },
+      {
+        "command": "agy-argon.installBrowser",
+        "title": "Argon: Install / Repair Chromium Browser",
+        "icon": "$(cloud-download)"
       }
     ]
   },

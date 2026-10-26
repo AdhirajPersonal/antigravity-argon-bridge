@@ -6,7 +6,7 @@ import { GeminiClient } from './bridge/gemini-client.js';
 import { UsageStore } from './telemetry/usage-store.js';
 import { ThreadStore } from './telemetry/thread-store.js';
 import { ArgonSidebarProvider } from './webview/sidebar-provider.js';
-import { getSettings, saveSettings, ThinkingModeSetting, BASE_DATA_DIR } from './config.js';
+import { getSettings, saveSettings, ThinkingModeSetting, BASE_DATA_DIR, getBrowserStatus } from './config.js';
 import { ensureGlobalMcpConfig, removeGlobalMcpConfig } from './scripts/mcp-lifecycle.js';
 
 let statusBarItem: vscode.StatusBarItem;
@@ -133,7 +133,20 @@ export function activate(context: vscode.ExtensionContext) {
             sidebarProvider.syncState(true);
             vscode.window.showInformationMessage(`Argon: Connected ${acc.email} (${acc.plan})`);
           } catch (err: any) {
-            vscode.window.showErrorMessage(`Argon Login failed: ${err.message}`);
+            const message: string = err?.message || String(err);
+            // Playwright browser missing or version-drifted after an extension
+            // update: offer the one-click download instead of a dead-end error.
+            if (/Executable doesn't exist|Argon requires a Playwright Chromium download/i.test(message)) {
+              const action = await vscode.window.showErrorMessage(
+                'Argon Login failed: the Playwright Chromium download is missing (it is not bundled with the extension).',
+                'Download Chromium'
+              );
+              if (action === 'Download Chromium') {
+                await vscode.commands.executeCommand('agy-argon.installBrowser');
+              }
+              return;
+            }
+            vscode.window.showErrorMessage(`Argon Login failed: ${message}`);
           }
         }
       );
@@ -216,6 +229,52 @@ export function activate(context: vscode.ExtensionContext) {
           }
         }
       );
+    })
+  );
+
+  // Command: Install / Repair the Playwright Chromium browser.
+  // The browser is not shipped in the VSIX and is pinned to the exact revision
+  // required by the bundled playwright-core, so it must be downloaded once per
+  // Playwright version (fresh install or extension upgrade).
+  context.subscriptions.push(
+    vscode.commands.registerCommand('agy-argon.installBrowser', async () => {
+      const status = getBrowserStatus(false);
+      if (status.installed) {
+        vscode.window.showInformationMessage('Argon: Playwright Chromium is already installed.');
+        return;
+      }
+
+      const cliPath = path.join(context.extensionPath, 'node_modules', 'playwright-core', 'cli.js');
+      if (!fs.existsSync(cliPath)) {
+        vscode.window.showErrorMessage(
+          `Argon: Cannot find the bundled Playwright CLI at ${cliPath}. Reinstall the extension.`
+        );
+        return;
+      }
+
+      const terminal = vscode.window.createTerminal({ name: 'Argon: Install Chromium' });
+      terminal.show();
+      // Quote both paths: the extension directory often contains spaces
+      // (e.g. "~/Library/Application Support/...").
+      terminal.sendText(
+        `"${process.execPath}" "${cliPath}" install chromium; echo "\\n[Argon] Chromium download finished. Now run: Argon: Add Google Account"`
+      );
+
+      const answer = await vscode.window.showInformationMessage(
+        'Argon: downloading Playwright Chromium in the terminal (approx. 150 MB, one-off). Run "Argon: Add Google Account" once it completes.',
+        'Re-check now'
+      );
+      if (answer === 'Re-check now') {
+        if (getBrowserStatus(false).installed) {
+          vscode.window.showInformationMessage(
+            'Argon: Chromium installed. You can now run "Argon: Add Google Account".'
+          );
+        } else {
+          vscode.window.showWarningMessage(
+            'Argon: Chromium is not installed yet — waiting for the terminal download to finish.'
+          );
+        }
+      }
     })
   );
 

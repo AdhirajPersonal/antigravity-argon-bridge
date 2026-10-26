@@ -3,6 +3,7 @@ import {
   ThinkingLevel,
   OfficialUsageLimits,
   getSettings,
+  assertBrowserInstalled,
 } from '../config.js';
 import { SessionManager } from '../auth/session-manager.js';
 import { UsageStore } from '../telemetry/usage-store.js';
@@ -45,6 +46,10 @@ export class GeminiClient {
         'No active account found. Please log in first using the "argon_login" tool or run "npm run cli login".'
       );
     }
+
+    // Guard against a missing / version-drifted Playwright browser so the MCP
+    // tools fail with a fixable message instead of a raw launch error.
+    assertBrowserInstalled();
 
     // If current active account is rate-limited, attempt auto-rotation
     if (activeAccount.status === 'rate-limited') {
