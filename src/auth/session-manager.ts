@@ -4,6 +4,7 @@ import { chromium, BrowserContext } from 'playwright';
 import {
   PROFILES_DIR,
   ensureDirsExist,
+  assertBrowserInstalled,
   AccountMetadata,
 } from '../config.js';
 import { UsageStore } from '../telemetry/usage-store.js';
@@ -35,6 +36,10 @@ export class SessionManager {
    * If targetAccountId is passed, re-authenticates that specific account in-place.
    */
   async loginInteractive(alias?: string, targetAccountId?: string): Promise<AccountMetadata> {
+    // Fail fast with an actionable message instead of Playwright's raw
+    // "Executable doesn't exist at .../chromium-<rev>/..." error.
+    assertBrowserInstalled();
+
     const isRelogin = !!targetAccountId;
     const tempId = targetAccountId || `acc_${Date.now()}`;
     const profileDir = this.getProfileDir(tempId);
